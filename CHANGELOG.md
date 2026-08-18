@@ -4,6 +4,12 @@
 
 格式依循 [Keep a Changelog](https://keepachangelog.com/zh-TW/1.1.0/)，版本號採用 [Semantic Versioning](https://semver.org/lang/zh-TW/)。
 
+## [1.0.1] - 2026-08-18
+
+### Changed
+
+- 將網站存取模式改為公開，使用者不需要登入 ChatGPT 即可開始測驗
+
 ## [1.0.0] - 2026-08-18
 
 ### Added

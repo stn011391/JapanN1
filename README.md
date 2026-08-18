@@ -6,7 +6,7 @@
 
 ## 目前版本
 
-**v1.0.0**
+**v1.0.1**
 
 版本異動請參考 [CHANGELOG.md](CHANGELOG.md)。
 
