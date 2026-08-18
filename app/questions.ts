@@ -153,4 +153,61 @@ const N1: Question[] = [
   q(20,"閱讀","文章を 読んで、答えてください。","筆者が 求めている 姿勢は どれですか。",["合意を無条件に信じ続ける","合意を尊重しながら修正可能性も認める","新しい証拠をすべて疑う","どの意見も同じ価値だとみなす"],1,"既尊重經驗證的共識，也對新證據與更新保持開放。","科学的な合意は、絶対に揺るがない真理を意味しない。新たな証拠によって修正される可能性を常に含んでいる。だからといって、合意を単なる一意見として退けてよいわけでもない。多くの検証を経て得られた、現時点で最も妥当な説明として尊重しつつ、更新の可能性にも開かれている姿勢が求められる。"),
 ];
 
-export const QUESTION_BANKS: Record<Level, Question[]> = { N5, N4, N3, N2, N1 };
+const SCENES = ["教室", "職場", "車站", "商店", "新聞"];
+const SOURCES = ["會話", "郵件", "公告", "教材", "廣播"];
+const JAPANESE_NAMES = [
+  "田中", "山田", "佐藤", "鈴木", "高橋", "伊藤", "渡辺", "中村", "小林", "加藤",
+  "吉田", "山本", "松本", "井上", "木村", "林", "清水", "山口", "森", "池田",
+  "橋本", "阿部", "石川", "前田", "藤田",
+];
+
+function rotateOptions(question: Question, shift: number) {
+  if (shift === 0) return { options: question.options, correct: question.correct };
+  const options = question.options.map((_, index) => question.options[(index + shift) % question.options.length]);
+  return { options, correct: (question.correct - shift + question.options.length) % question.options.length };
+}
+
+function personalize(text: string | undefined, variant: number) {
+  if (!text || variant === 0) return text;
+  const first = JAPANESE_NAMES[variant];
+  const second = JAPANESE_NAMES[(variant + 8) % JAPANESE_NAMES.length];
+  return text
+    .replaceAll("田中", first)
+    .replaceAll("山田", second)
+    .replaceAll("佐藤", JAPANESE_NAMES[(variant + 15) % JAPANESE_NAMES.length])
+    .replaceAll("ゆき", ["あい", "はな", "りな", "えみ", "みき"][variant % 5])
+    .replaceAll("まり", ["さき", "ゆい", "なお", "あや", "れい"][variant % 5])
+    .replaceAll("ミナ", ["ユナ", "サラ", "エマ", "リナ", "マリ"][variant % 5]);
+}
+
+function expandBank(source: Question[]): Question[] {
+  return Array.from({ length: 25 }, (_, variant) => source.map(question => {
+    if (variant === 0) return question;
+    const scene = SCENES[variant % SCENES.length];
+    const sourceLabel = SOURCES[Math.floor(variant / 5)];
+    const rotated = rotateOptions(question, (variant + question.id) % question.options.length);
+    const prompt = personalize(question.prompt, variant) ?? question.prompt;
+    const passage = personalize(question.passage, variant);
+
+    return {
+      ...question,
+      id: variant * source.length + question.id,
+      instruction: `【${sourceLabel}情境】${question.instruction}`,
+      prompt: question.category === "閱讀" ? prompt : `〔${scene}〕${prompt}`,
+      passage: passage ? `【${scene}・${sourceLabel}】\n${passage}` : undefined,
+      options: rotated.options,
+      correct: rotated.correct,
+      explanation: `${personalize(question.explanation, variant)} 本題屬於第 ${variant + 1} 組情境練習。`,
+    };
+  })).flat();
+}
+
+const SOURCE_BANKS: Record<Level, Question[]> = { N5, N4, N3, N2, N1 };
+
+export const QUESTION_BANKS: Record<Level, Question[]> = {
+  N5: expandBank(SOURCE_BANKS.N5),
+  N4: expandBank(SOURCE_BANKS.N4),
+  N3: expandBank(SOURCE_BANKS.N3),
+  N2: expandBank(SOURCE_BANKS.N2),
+  N1: expandBank(SOURCE_BANKS.N1),
+};

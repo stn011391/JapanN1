@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { LEVEL_CONFIG, LEVELS, QUESTION_BANKS, type Category, type Level, type Question } from "./questions";
+import { selectUnseenTest } from "./question-selection";
 
 type Response = { id: number; selected: number; correct: boolean };
 type Phase = "home" | "quiz" | "result";
@@ -16,16 +17,37 @@ function MarkedText({ text }: { text: string }) {
   return <>{text.split(/(\[\[.*?\]\])/g).map((part, i) => part.startsWith("[[") ? <u key={i}>{part.slice(2, -2)}</u> : <span key={i}>{part}</span>)}</>;
 }
 
+function readSeenIds(level: Level) {
+  try {
+    const value = JSON.parse(window.localStorage.getItem(`jlpt-seen-${level}-v2`) ?? "[]");
+    return Array.isArray(value) ? value.filter(item => Number.isInteger(item)) as number[] : [];
+  } catch {
+    return [];
+  }
+}
+
+function writeSeenIds(level: Level, ids: number[]) {
+  try {
+    window.localStorage.setItem(`jlpt-seen-${level}-v2`, JSON.stringify(ids));
+  } catch {
+    // Some privacy-focused browsers disable localStorage; session state still prevents repeats.
+  }
+}
+
+const EMPTY_SEEN: Record<Level, number[]> = { N5: [], N4: [], N3: [], N2: [], N1: [] };
+
 export default function Home() {
   const [phase, setPhase] = useState<Phase>("home");
   const [level, setLevel] = useState<Level>("N3");
-  const [queue, setQueue] = useState<Question[]>(QUESTION_BANKS.N3);
+  const [queue, setQueue] = useState<Question[]>(QUESTION_BANKS.N3.slice(0, 20));
   const [index, setIndex] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
   const [revealed, setRevealed] = useState(false);
   const [responses, setResponses] = useState<Response[]>([]);
   const [remaining, setRemaining] = useState(LEVEL_CONFIG.N3.minutes * 60);
   const [best, setBest] = useState<number | null>(null);
+  const [seenCount, setSeenCount] = useState(0);
+  const [seenByLevel, setSeenByLevel] = useState<Record<Level, number[]>>(EMPTY_SEEN);
   const [attemptMode, setAttemptMode] = useState<"full" | "retry">("full");
 
   const bank = QUESTION_BANKS[level];
@@ -35,6 +57,11 @@ export default function Home() {
     const frame = window.requestAnimationFrame(() => {
       const saved = window.localStorage.getItem(`jlpt-best-${level}`);
       setBest(saved === null ? null : Number(saved));
+      const savedSeen = readSeenIds(level);
+      if (savedSeen.length) {
+        setSeenCount(savedSeen.length);
+        setSeenByLevel(current => ({ ...current, [level]: savedSeen }));
+      }
     });
     return () => window.cancelAnimationFrame(frame);
   }, [level]);
@@ -69,18 +96,30 @@ export default function Home() {
 
   function chooseLevel(nextLevel: Level) {
     setLevel(nextLevel);
-    setQueue(QUESTION_BANKS[nextLevel]);
+    setQueue(QUESTION_BANKS[nextLevel].slice(0, 20));
     setSelected(null);
+    setSeenCount(seenByLevel[nextLevel].length);
   }
 
-  function beginTest(items: Question[] = bank, mode: "full" | "retry" = "full") {
-    setQueue(items);
+  function beginTest(items?: Question[], mode: "full" | "retry" = "full") {
+    let testItems = items;
+    if (!testItems && mode === "full") {
+      const storedSeen = readSeenIds(level);
+      const sessionSeen = seenByLevel[level];
+      const selection = selectUnseenTest(bank, storedSeen.length >= sessionSeen.length ? storedSeen : sessionSeen);
+      testItems = selection.questions;
+      writeSeenIds(level, selection.seenIds);
+      setSeenByLevel(current => ({ ...current, [level]: selection.seenIds }));
+      setSeenCount(selection.seenIds.length);
+    }
+    const nextQueue = testItems ?? bank.slice(0, 20);
+    setQueue(nextQueue);
     setIndex(0);
     setSelected(null);
     setRevealed(false);
     setResponses([]);
     setAttemptMode(mode);
-    setRemaining(Math.max(5 * 60, Math.round(config.minutes * 60 * items.length / bank.length)));
+    setRemaining(Math.max(5 * 60, Math.round(config.minutes * 60 * nextQueue.length / 20)));
     setPhase("quiz");
     window.scrollTo(0, 0);
   }
@@ -132,7 +171,7 @@ export default function Home() {
 
           <div className={`exam-card ${current.passage ? "has-passage" : ""}`}>
             <div className="exam-heading">
-              <span>{current.category}</span><b>{level}・第 {current.id} 題</b>
+              <span>{current.category}</span><b>{level}・本次第 {index + 1} 題・題庫 #{current.id}</b>
             </div>
             <p className="exam-instruction">{current.instruction}</p>
             {current.passage && <div className="reading-passage">{current.passage.split("\n").map((line, i) => <p key={i}>{line}</p>)}</div>}
@@ -200,7 +239,7 @@ export default function Home() {
                 const value = total ? Math.round(right / total * 100) : 0;
                 return <div className="skill-row" key={category}><div><b>{category}</b><span>{right}/{total} 題</span></div><div className="skill-track"><i style={{ width: `${value}%` }} /></div><strong>{value}%</strong></div>;
               })}
-              <p className="result-note">※ 70% 是本站設定的練習目標，並非 JLPT 官方換算分數。</p>
+              <p className="result-note">※ 70% 是本站設定的練習目標，並非 JLPT 官方換算分數。本次 20 題不會與本輪先前測驗重複。</p>
             </section>
 
             <section className="review-card">
@@ -235,10 +274,10 @@ export default function Home() {
         <div className="hero-copy">
           <div className="eyebrow"><span>LEVEL</span> N3 是推薦目標，也可以從基礎開始。</div>
           <h1>選對難度，<br /><em>一步一步達成 N3。</em></h1>
-          <p className="hero-lead">從 N5 到 N1 自由選擇。每級 20 道精選題，涵蓋單字漢字、文法與閱讀，答完立即看見強項與弱點。</p>
+          <p className="hero-lead">從 N5 到 N1 自由選擇。每級擁有 500 題題庫，每次隨機抽 20 題；連續 25 次、共 500 題都不重複，全部完成後才開始新一輪。</p>
 
           <div className="level-selector" aria-label="選擇 JLPT 難度">
-            <div className="level-selector-title"><b>選擇難度</b><span>{config.description}</span></div>
+            <div className="level-selector-title"><b>選擇難度</b><span>{config.description}・本輪已抽 {seenCount} / 500 題</span></div>
             <div className="level-options">
               {LEVELS.map(item => <button key={item} className={level === item ? "active" : ""} aria-pressed={level === item} onClick={() => chooseLevel(item)}>{item === "N3" && <small>推薦</small>}<b>{item}</b><span>{LEVEL_CONFIG[item].name}</span></button>)}
             </div>
@@ -248,14 +287,14 @@ export default function Home() {
             <button className="primary-button" onClick={() => beginTest()}>開始 {level} 測驗 <span>→</span></button>
             <span className="time-note"><b>約 {config.minutes} 分鐘</b><small>公開使用・不需登入</small></span>
           </div>
-          <div className="trust-row"><span><i>✓</i> N5～N1</span><span><i>✓</i> 即時解析</span><span><i>✓</i> 分級成績</span></div>
+          <div className="trust-row"><span><i>✓</i> 每級 500 題</span><span><i>✓</i> 25 回不重複</span><span><i>✓</i> 即時解析</span></div>
         </div>
 
         <div className="test-ticket" aria-label={`${level} 測驗資訊卡`}>
           <div className="ticket-edge">日本語能力試験</div>
           <div className="ticket-body">
             <div className="ticket-top"><span>{config.name}模擬練習券</span><b>{level}</b></div>
-            <div className="ticket-title">日本語<br />実力診断</div><div className="ticket-focus">{config.focus}</div>
+            <div className="ticket-title">日本語<br />実力診断</div><div className="ticket-focus">{config.focus}・全 500 題</div>
             <div className="ticket-grid"><span><small>問題数</small><b>20</b></span><span><small>目安時間</small><b>{config.minutes}<sup>分</sup></b></span><span><small>練習目標</small><b>70<sup>%</sup></b></span></div>
             <div className="barcode" aria-hidden="true"><span>|||| || | ||| | | ||||</span><small>{level}-2026-READY</small></div>
           </div><div className="stamp">目標<br />N3</div>
@@ -265,7 +304,7 @@ export default function Home() {
       <section className="overview" aria-label="測驗範圍">
         <div className="section-heading"><div><span>{level} TEST MAP</span><h2>{level} 會測什麼？</h2></div><p>題目依照 {level} 對應能力設計，<br />從詞彙理解到情境應用。</p></div>
         <div className="category-grid">{categoryCards.map((item, cardIndex) => <article className={`category-card ${item.tone}`} key={item.kanji}><span className="category-index">0{cardIndex + 1}</span><div className="kanji-orb">{item.kanji}</div><div><h3>{item.label}</h3><p>{item.meta}・{level} 對應範圍</p></div></article>)}</div>
-        <div className="overview-cta"><span>現在選擇：<b>{level}・{config.name}</b></span><button onClick={() => beginTest()}>進入 20 題模擬測驗 →</button></div>
+        <div className="overview-cta"><span>現在選擇：<b>{level}・{config.name}</b>　題庫進度 {seenCount}/500</span><button onClick={() => beginTest()}>隨機抽取 20 題 →</button></div>
       </section>
     </main>
   );
