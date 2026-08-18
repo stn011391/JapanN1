@@ -34,10 +34,50 @@ export function selectUnseenTest(
     seen.clear();
   }
 
-  const picked = categories.flatMap(category => shuffle(
-    bank.filter(question => question.category === category && !seen.has(question.id)),
-    random,
-  ).slice(0, TEST_BLUEPRINT[category]));
+  const seenFocus = new Set(bank.filter(question => seen.has(question.id)).map(question => question.focus));
+  const picked = categories.flatMap(category => {
+    const needed = TEST_BLUEPRINT[category];
+    const candidates = shuffle(
+      bank.filter(question => question.category === category && !seen.has(question.id)),
+      random,
+    );
+    const selected: Question[] = [];
+    const selectedFocus = new Set<string>();
+    const groups = new Map<string, Question[]>();
+
+    for (const question of candidates) {
+      const group = groups.get(question.focus) ?? [];
+      group.push(question);
+      groups.set(question.focus, group);
+    }
+
+    const freshGroups = shuffle(
+      [...groups.entries()].filter(([focus]) => !seenFocus.has(focus)),
+      random,
+    );
+    for (const [focus, questions] of freshGroups) {
+      if (selected.length === needed) break;
+      selected.push(shuffle(questions, random)[0]);
+      selectedFocus.add(focus);
+    }
+
+    const balancedGroups = [...groups.entries()]
+      .filter(([focus]) => !selectedFocus.has(focus))
+      .map(entry => ({ entry, tieBreak: random() }))
+      .sort((left, right) => right.entry[1].length - left.entry[1].length || left.tieBreak - right.tieBreak);
+    for (const { entry: [focus, questions] } of balancedGroups) {
+      if (selected.length === needed) break;
+      selected.push(shuffle(questions, random)[0]);
+      selectedFocus.add(focus);
+    }
+
+    for (const question of candidates) {
+      if (selected.length === needed) break;
+      if (!selected.includes(question)) selected.push(question);
+    }
+
+    return selected;
+  });
 
   return {
     questions: shuffle(picked, random),

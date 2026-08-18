@@ -12,6 +12,7 @@ const categoryCards = [
   { kanji: "文", label: "文法", meta: "6 題", tone: "gold" },
   { kanji: "読", label: "閱讀", meta: "6 題", tone: "blue" },
 ];
+const QUESTION_PROGRESS_VERSION = "v3";
 
 function MarkedText({ text }: { text: string }) {
   return <>{text.split(/(\[\[.*?\]\])/g).map((part, i) => part.startsWith("[[") ? <u key={i}>{part.slice(2, -2)}</u> : <span key={i}>{part}</span>)}</>;
@@ -19,7 +20,7 @@ function MarkedText({ text }: { text: string }) {
 
 function readSeenIds(level: Level) {
   try {
-    const value = JSON.parse(window.localStorage.getItem(`jlpt-seen-${level}-v2`) ?? "[]");
+    const value = JSON.parse(window.localStorage.getItem(`jlpt-seen-${level}-${QUESTION_PROGRESS_VERSION}`) ?? "[]");
     return Array.isArray(value) ? value.filter(item => Number.isInteger(item)) as number[] : [];
   } catch {
     return [];
@@ -28,7 +29,7 @@ function readSeenIds(level: Level) {
 
 function writeSeenIds(level: Level, ids: number[]) {
   try {
-    window.localStorage.setItem(`jlpt-seen-${level}-v2`, JSON.stringify(ids));
+    window.localStorage.setItem(`jlpt-seen-${level}-${QUESTION_PROGRESS_VERSION}`, JSON.stringify(ids));
   } catch {
     // Some privacy-focused browsers disable localStorage; session state still prevents repeats.
   }
@@ -239,7 +240,7 @@ export default function Home() {
                 const value = total ? Math.round(right / total * 100) : 0;
                 return <div className="skill-row" key={category}><div><b>{category}</b><span>{right}/{total} 題</span></div><div className="skill-track"><i style={{ width: `${value}%` }} /></div><strong>{value}%</strong></div>;
               })}
-              <p className="result-note">※ 70% 是本站設定的練習目標，並非 JLPT 官方換算分數。本次 20 題不會與本輪先前測驗重複。</p>
+              <p className="result-note">※ 70% 是本站設定的練習目標，並非 JLPT 官方換算分數。點「換新 20 題」會自動載入尚未出現的新單字與題目。</p>
             </section>
 
             <section className="review-card">
@@ -256,7 +257,7 @@ export default function Home() {
           <div className="result-actions">
             <button className="secondary-button" onClick={() => setPhase("home")}>切換難度</button>
             {mistakes.length > 0 && <button className="secondary-button" onClick={() => beginTest(mistakes, "retry")}>只練錯題</button>}
-            <button className="primary-button result-primary" onClick={() => beginTest()}>再測一次 <span>→</span></button>
+            <button className="primary-button result-primary" onClick={() => beginTest()}>換新 20 題 <span>→</span></button>
           </div>
         </section>
       </main>
@@ -274,7 +275,7 @@ export default function Home() {
         <div className="hero-copy">
           <div className="eyebrow"><span>LEVEL</span> N3 是推薦目標，也可以從基礎開始。</div>
           <h1>選對難度，<br /><em>一步一步達成 N3。</em></h1>
-          <p className="hero-lead">從 N5 到 N1 自由選擇。每級擁有 500 題題庫，每次隨機抽 20 題；連續 25 次、共 500 題都不重複，全部完成後才開始新一輪。</p>
+          <p className="hero-lead">從 N5 到 N1 自由選擇。每次開始都會自動換成 20 題新內容，優先安排尚未出現的 8 個單字與不同文法重點；連續 25 次、共 500 題完成後才開始新一輪。</p>
 
           <div className="level-selector" aria-label="選擇 JLPT 難度">
             <div className="level-selector-title"><b>選擇難度</b><span>{config.description}・本輪已抽 {seenCount} / 500 題</span></div>
@@ -287,7 +288,7 @@ export default function Home() {
             <button className="primary-button" onClick={() => beginTest()}>開始 {level} 測驗 <span>→</span></button>
             <span className="time-note"><b>約 {config.minutes} 分鐘</b><small>公開使用・不需登入</small></span>
           </div>
-          <div className="trust-row"><span><i>✓</i> 每級 500 題</span><span><i>✓</i> 25 回不重複</span><span><i>✓</i> 即時解析</span></div>
+          <div className="trust-row"><span><i>✓</i> 每次自動換題</span><span><i>✓</i> 新單字優先</span><span><i>✓</i> 即時解析</span></div>
         </div>
 
         <div className="test-ticket" aria-label={`${level} 測驗資訊卡`}>
@@ -304,7 +305,7 @@ export default function Home() {
       <section className="overview" aria-label="測驗範圍">
         <div className="section-heading"><div><span>{level} TEST MAP</span><h2>{level} 會測什麼？</h2></div><p>題目依照 {level} 對應能力設計，<br />從詞彙理解到情境應用。</p></div>
         <div className="category-grid">{categoryCards.map((item, cardIndex) => <article className={`category-card ${item.tone}`} key={item.kanji}><span className="category-index">0{cardIndex + 1}</span><div className="kanji-orb">{item.kanji}</div><div><h3>{item.label}</h3><p>{item.meta}・{level} 對應範圍</p></div></article>)}</div>
-        <div className="overview-cta"><span>現在選擇：<b>{level}・{config.name}</b>　題庫進度 {seenCount}/500</span><button onClick={() => beginTest()}>隨機抽取 20 題 →</button></div>
+        <div className="overview-cta"><span>現在選擇：<b>{level}・{config.name}</b>　題庫進度 {seenCount}/500</span><button onClick={() => beginTest()}>自動換新 20 題 →</button></div>
       </section>
     </main>
   );

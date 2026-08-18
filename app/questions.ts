@@ -1,8 +1,11 @@
+import { VOCABULARY_BY_LEVEL } from "./vocabulary-data";
+
 export type Level = "N5" | "N4" | "N3" | "N2" | "N1";
 export type Category = "單字・漢字" | "文法" | "閱讀";
 
 export type Question = {
   id: number;
+  focus: string;
   category: Category;
   instruction: string;
   prompt: string;
@@ -36,7 +39,7 @@ const q = (
   correct: number,
   explanation: string,
   passage?: string,
-): Question => ({ id, category, instruction, prompt, options, correct, explanation, passage });
+): Question => ({ id, focus: `${category}:${prompt}`, category, instruction, prompt, options, correct, explanation, passage });
 
 const N5: Question[] = [
   q(1,"單字・漢字","＿＿＿の ことばは どう 読みますか。","[[月曜日]]に 日本語を 勉強します。",["かようび","げつようび","すいようび","もくようび"],1,"「月曜日」讀作 げつようび，意思是星期一。"),
@@ -153,6 +156,79 @@ const N1: Question[] = [
   q(20,"閱讀","文章を 読んで、答えてください。","筆者が 求めている 姿勢は どれですか。",["合意を無条件に信じ続ける","合意を尊重しながら修正可能性も認める","新しい証拠をすべて疑う","どの意見も同じ価値だとみなす"],1,"既尊重經驗證的共識，也對新證據與更新保持開放。","科学的な合意は、絶対に揺るがない真理を意味しない。新たな証拠によって修正される可能性を常に含んでいる。だからといって、合意を単なる一意見として退けてよいわけでもない。多くの検証を経て得られた、現時点で最も妥当な説明として尊重しつつ、更新の可能性にも開かれている姿勢が求められる。"),
 ];
 
+const EXTRA_GRAMMAR: Record<Level, Question[]> = {
+  N5: [
+    q(0,"文法","（　）に 何を 入れますか。","これは わたし（　）本です。",["が","を","の","で"],2,"所有者與物品之間使用「の」：わたしの本。"),
+    q(0,"文法","（　）に 何を 入れますか。","ねこは いす（　）下に います。",["の","を","へ","から"],0,"位置關係使用「名詞＋の＋位置」：いすの下。"),
+    q(0,"文法","（　）に 何を 入れますか。","スーパー（　）野菜を 買います。",["に","へ","で","と"],2,"動作進行的場所使用助詞「で」。"),
+    q(0,"文法","（　）に 何を 入れますか。","田中さん（　）学生です。",["へ","も","を","だけ"],1,"「も」表示也：田中也是學生。"),
+    q(0,"文法","（　）に 何を 入れますか。","いっしょに コーヒー（　）飲みませんか。",["を","が","へ","で"],0,"飲用的對象使用助詞「を」。"),
+    q(0,"文法","（　）に 何を 入れますか。","ここ（　）駅まで 歩きます。",["まで","から","より","だけ"],1,"「から～まで」表示從起點到終點。"),
+    q(0,"文法","（　）に 何を 入れますか。","教室に 学生が 五人（　）。",["あります","います","ですか","します"],1,"人或動物的存在使用「います」。"),
+    q(0,"文法","（　）に 何を 入れますか。","だれ（　）日本へ 行きますか。",["を","と","が","に"],1,"同行對象使用助詞「と」。"),
+    q(0,"文法","（　）に 何を 入れますか。","きのうは あまり 暑く（　）。",["ないです","ありませんでした","なかったです","ありません"],2,"い形容詞的過去否定可用「～くなかったです」。"),
+    q(0,"文法","（　）に 何を 入れますか。","この 部屋は 静か（　）きれいです。",["で","に","を","が"],0,"な形容詞並列時使用「で」。"),
+    q(0,"文法","（　）に 何を 入れますか。","日曜日に 何（　）しますか。",["が","を","で","へ"],1,"「何をしますか」詢問要做什麼。"),
+    q(0,"文法","（　）に 何を 入れますか。","この 料理は あまり 辛く（　）。",["です","ありません","でした","します"],1,"「あまり＋否定」表示不太……。"),
+  ],
+  N4: [
+    q(0,"文法","（　）に 何を 入れますか。","ここで 写真を 撮っ（　）ですか。",["てもいい","てはいけない","たほうが","てしまう"],0,"「て形＋もいい」表示獲得許可。"),
+    q(0,"文法","（　）に 何を 入れますか。","図書館で 大きな 声で 話し（　）。",["てもいいです","てはいけません","なくてもいいです","たことがあります"],1,"「てはいけません」表示禁止。"),
+    q(0,"文法","（　）に 何を 入れますか。","休みの日は 本を 読ん（　）します。",["だり、散歩したり","でも、散歩して","だら、散歩する","で、散歩たり"],0,"「たり～たりする」列舉代表性動作。"),
+    q(0,"文法","（　）に 何を 入れますか。","来年、日本へ 留学する（　）です。",["ところ","つもり","そう","ながら"],1,"「辭書形＋つもり」表示計畫或打算。"),
+    q(0,"文法","（　）に 何を 入れますか。","寝る（　）、歯を 磨きます。",["まで","前に","あとで","ながら"],1,"「辭書形＋前に」表示做某事之前。"),
+    q(0,"文法","（　）に 何を 入れますか。","宿題を した（　）、テレビを 見ます。",["前に","あとで","ながら","しか"],1,"「た形＋あとで」表示做完之後。"),
+    q(0,"文法","（　）に 何を 入れますか。","駅へ 行く（　）を 教えてください。",["ところ","方","ため","こと"],1,"「動詞ます形去ます＋方」表示做法。"),
+    q(0,"文法","（　）に 何を 入れますか。","この かばんは 重（　）ます。",["すぎ","ながら","そうで","やすく"],0,"形容詞詞幹＋すぎる表示過度：太重。"),
+    q(0,"文法","（　）に 何を 入れますか。","熱が あるなら、早く 寝た（　）です。",["ことがある","ほうがいい","つもり","ところ"],1,"「た形＋ほうがいい」表示建議。"),
+    q(0,"文法","（　）に 何を 入れますか。","明日は 休みですから、早く 起き（　）。",["てはいけません","なくてもいいです","なければなりません","たほうがいいです"],1,"「なくてもいい」表示不必做某事。"),
+    q(0,"文法","（　）に 何を 入れますか。","電車が 遅れた（　）、会議に 間に合いませんでした。",["ので","のに","まで","しか"],0,"「ので」用來客觀說明原因。"),
+    q(0,"文法","（　）に 何を 入れますか。","明日は 雨が 降る（　）思います。",["を","に","と","で"],2,"引用想法時使用「普通形＋と思います」。"),
+  ],
+  N3: [
+    q(0,"文法","（　）に 何を 入れますか。","外が 濡れています。雨が 降った（　）です。",["よう","ため","ばかり","ほど"],0,"「ようだ」可根據眼前跡象作推測。"),
+    q(0,"文法","（　）に 何を 入れますか。","天気予報によると、明日は 雪（　）です。",["らしい","ように","ばかり","ところ"],0,"「らしい」表示根據聽來的資訊判斷。"),
+    q(0,"文法","（　）に 何を 入れますか。","日本で 働く（　）、日本語を 勉強しています。",["ために","ことから","ところで","ばかりに"],0,"「ために」表示為了實現明確目的。"),
+    q(0,"文法","（　）に 何を 入れますか。","この 建物は 有名な 建築家（　）設計されました。",["について","によって","にとって","に対して"],1,"被動句中的動作者可用「によって」。"),
+    q(0,"文法","（　）に 何を 入れますか。","健康のため、夜食を 食べない（　）。",["ことにしました","ことになりました","ようでした","ところでした"],0,"「ことにする」表示自己作出的決定。"),
+    q(0,"文法","（　）に 何を 入れますか。","少し 高く（　）、品質が 良ければ 買います。",["ても","ので","ながら","ほど"],0,"「ても」表示即使前項成立，後項仍不受影響。"),
+    q(0,"文法","（　）に 何を 入れますか。","時間が あれ（　）、この 資料も 読んでください。",["ほど","ば","まで","しか"],1,"假定形「ば」表示如果有時間。"),
+    q(0,"文法","（　）に 何を 入れますか。","駅に 近い 店（　）、家賃が 高いです。",["ほど","だけ","しか","まで"],0,"「～ば～ほど」以外，也可用「名詞＋ほど」表示程度關聯。"),
+    q(0,"文法","（　）に 何を 入れますか。","寝不足の（　）、仕事で ミスを しました。",["おかげで","せいで","ついでに","かわりに"],1,"「せいで」表示負面結果的原因。"),
+    q(0,"文法","（　）に 何を 入れますか。","兄が 料理する（　）、私は 買い物を します。",["うちに","かわりに","ために","ほどに"],1,"「かわりに」表示代替或分工。"),
+    q(0,"文法","（　）に 何を 入れますか。","温かい（　）、この スープを 飲んでください。",["ところに","うちに","ばかりに","ことに"],1,"「うちに」表示趁某狀態尚未改變。"),
+    q(0,"文法","（　）に 何を 入れますか。","日本の 食文化（　）レポートを 書きました。",["にとって","について","によって","に対して"],1,"「について」表示談論或研究的主題。"),
+  ],
+  N2: [
+    q(0,"文法","（　）に 何を 入れますか。","電気が 消えている。彼は もう 帰った（　）。",["に違いない","わけがない","ことはない","ものではない"],0,"「に違いない」表示說話者有高度確信。"),
+    q(0,"文法","（　）に 何を 入れますか。","あの まじめな 田中さんが 約束を 忘れる（　）。",["に違いない","わけがない","かねない","ことになる"],1,"「わけがない」表示依據常理判斷絕不可能。"),
+    q(0,"文法","（　）に 何を 入れますか。","少し 遅れただけだから、そんなに 謝る（　）。",["ことはない","に限らない","わけではない","ものがある"],0,"「ことはない」表示沒有必要。"),
+    q(0,"文法","（　）に 何を 入れますか。","辛い料理も、食べられ（　）が、得意ではない。",["ないことはない","るわけがない","ざるを得ない","かねない"],0,"「ないことはない」表示並非完全不能。"),
+    q(0,"文法","（　）に 何を 入れますか。","予算（　）、計画の 内容を 調整します。",["に応じて","に反して","を問わず","を通じて"],0,"「に応じて」表示配合條件作相應變化。"),
+    q(0,"文法","（　）に 何を 入れますか。","調査結果（　）、新しい 対策が 決められた。",["に基づいて","をめぐって","に先立って","に反して"],0,"「に基づいて」表示以某資料為根據。"),
+    q(0,"文法","（　）に 何を 入れますか。","この 制度は 正社員（　）、アルバイトも 利用できる。",["に限らず","に限って","に比べて","に際して"],0,"「に限らず」表示不只限於某範圍。"),
+    q(0,"文法","（　）に 何を 入れますか。","経験の 有無（　）、応募できます。",["に伴って","を問わず","に沿って","をこめて"],1,"「を問わず」表示不受該條件限制。"),
+    q(0,"文法","（　）に 何を 入れますか。","引き受けた（　）、最後まで やり遂げます。",["以上","反面","末に","つつ"],0,"「以上」表示既然如此，就有相應責任。"),
+    q(0,"文法","（　）に 何を 入れますか。","都会は 便利な（　）、生活費が 高い。",["以上","反面","末に","一方でしか"],1,"「反面」表示同一事物的相反面向。"),
+    q(0,"文法","（　）に 何を 入れますか。","何度も 話し合った（　）、計画を 中止した。",["末に","うえで","際に","つつ"],0,"「た末に」表示經過長時間或多次過程後得到結果。"),
+    q(0,"文法","（　）に 何を 入れますか。","この 地域では 人口が 減少し（　）。",["つつある","かねない","きれない","にすぎない"],0,"「つつある」表示某變化正在持續進行。"),
+  ],
+  N1: [
+    q(0,"文法","（　）に 何を 入れますか。","長年の 研究成果は 高く 評価する（　）。",["に足る","に堪えない","に及ばない","に限る"],0,"「に足る」表示值得做某事。"),
+    q(0,"文法","（　）に 何を 入れますか。","被災者の 苦労は 想像（　）。",["にかたくない","に足りない","にたえない","に及ばない"],0,"「想像にかたくない」表示不難想像。"),
+    q(0,"文法","（　）に 何を 入れますか。","技術力と 経験が（　）、大きな 成果につながった。",["相まって","先立って","至って","伴わず"],0,"「と相まって」表示多個因素相互作用。"),
+    q(0,"文法","（　）に 何を 入れますか。","今年は 昇進に 結婚にと、めでたいこと（　）だ。",["ずくめ","まみれ","尽くしよう","がてら"],0,"「ずくめ」表示全都是某種事物。"),
+    q(0,"文法","（　）に 何を 入れますか。","泥（　）になりながら、選手は 最後まで 戦った。",["まみれ","ずくめ","がてら","なし"],0,"「まみれ」表示表面沾滿不好的東西。"),
+    q(0,"文法","（　）に 何を 入れますか。","完璧とは 言え（　）、十分に 評価できる 内容だ。",["ないまでも","ずにはおかず","までもなく","ではあるまいし"],0,"「ないまでも」表示即使達不到前項程度，至少仍有後項。"),
+    q(0,"文法","（　）に 何を 入れますか。","東京公演（　）、全国ツアーが 始まる。",["を皮切りに","に至るまで","を余儀なく","に則して"],0,"「を皮切りに」表示以某事為開端依序展開。"),
+    q(0,"文法","（　）に 何を 入れますか。","社長から 新入社員（　）、全員が 研修に 参加した。",["に至るまで","を皮切りに","にかたくなく","を禁じ得ず"],0,"「に至るまで」表示範圍甚至延伸到某處。"),
+    q(0,"文法","（　）に 何を 入れますか。","結果は 明らかで、改めて 説明する（　）。",["までもない","に足る","ではあるまい","にかたくない"],0,"「までもない」表示沒有必要做到某事。"),
+    q(0,"文法","（　）に 何を 入れますか。","子ども（　）、自分の 行動には 責任を 持つべきだ。",["ではあるまいし","といえども","に至って","ならでは"],0,"「ではあるまいし」表示又不是某種身分，不應有該行為。"),
+    q(0,"文法","（　）に 何を 入れますか。","理由の（　）、規則違反は 認められない。",["いかんによらず","かたわら","そばから","ごときで"],0,"「いかんによらず」表示不論內容或結果如何。"),
+    q(0,"文法","（　）に 何を 入れますか。","国を 発展させ（　）、教育改革を 進めた。",["んがため","そばから","とばかりに","が最後"],0,"「んがため」表示為了實現強烈目的。"),
+  ],
+};
+
 const SCENES = ["教室", "職場", "車站", "商店", "新聞"];
 const SOURCES = ["會話", "郵件", "公告", "教材", "廣播"];
 const JAPANESE_NAMES = [
@@ -180,34 +256,85 @@ function personalize(text: string | undefined, variant: number) {
     .replaceAll("ミナ", ["ユナ", "サラ", "エマ", "リナ", "マリ"][variant % 5]);
 }
 
-function expandBank(source: Question[]): Question[] {
-  return Array.from({ length: 25 }, (_, variant) => source.map(question => {
-    if (variant === 0) return question;
-    const scene = SCENES[variant % SCENES.length];
-    const sourceLabel = SOURCES[Math.floor(variant / 5)];
-    const rotated = rotateOptions(question, (variant + question.id) % question.options.length);
-    const prompt = personalize(question.prompt, variant) ?? question.prompt;
-    const passage = personalize(question.passage, variant);
+function buildVocabularyBank(level: Level): Question[] {
+  const entries = VOCABULARY_BY_LEVEL[level];
+
+  return entries.map((entry, index) => {
+    const readings = [entry.reading];
+    for (let offset = 1; readings.length < 4 && offset < entries.length; offset += 1) {
+      const candidate = entries[(index + offset * 37) % entries.length].reading;
+      if (!readings.includes(candidate)) readings.push(candidate);
+    }
+    const shift = (index * 3 + LEVELS.indexOf(level)) % readings.length;
+    const options = readings.map((_, optionIndex) => readings[(optionIndex + shift) % readings.length]);
 
     return {
-      ...question,
-      id: variant * source.length + question.id,
-      instruction: `【${sourceLabel}情境】${question.instruction}`,
-      prompt: question.category === "閱讀" ? prompt : `〔${scene}〕${prompt}`,
-      passage: passage ? `【${scene}・${sourceLabel}】\n${passage}` : undefined,
+      id: index + 1,
+      focus: `vocabulary:${entry.word}:${entry.reading}`,
+      category: "單字・漢字",
+      instruction: "＿＿＿の ことばは どう 読みますか。",
+      prompt: `[[${entry.word}]] の 読み方を 選んでください。`,
+      options,
+      correct: (readings.length - shift) % readings.length,
+      explanation: `「${entry.word}」讀作「${entry.reading}」。本輪完成後，下一份測驗會自動換成尚未出現的新單字。`,
+    };
+  });
+}
+
+function buildGrammarBank(level: Level, source: Question[]): Question[] {
+  const pool = [...source.filter(question => question.category === "文法"), ...EXTRA_GRAMMAR[level]];
+
+  return Array.from({ length: 150 }, (_, index) => {
+    const base = pool[index % pool.length];
+    const variant = Math.floor(index / pool.length);
+    const scene = SCENES[(variant + index) % SCENES.length];
+    const sourceLabel = SOURCES[variant % SOURCES.length];
+    const rotated = rotateOptions(base, (variant + index) % base.options.length);
+
+    return {
+      ...base,
+      id: 201 + index,
+      focus: `grammar:${base.prompt}`,
+      instruction: `【${sourceLabel}情境】${base.instruction}`,
+      prompt: `〔${scene}〕${personalize(base.prompt, variant) ?? base.prompt}`,
       options: rotated.options,
       correct: rotated.correct,
-      explanation: `${personalize(question.explanation, variant)} 本題屬於第 ${variant + 1} 組情境練習。`,
+      explanation: `${personalize(base.explanation, variant)} 系統會在下一份測驗優先安排不同的文法重點。`,
     };
-  })).flat();
+  });
+}
+
+function buildReadingBank(source: Question[]): Question[] {
+  const pool = source.filter(question => question.category === "閱讀");
+
+  return Array.from({ length: 150 }, (_, index) => {
+    const base = pool[index % pool.length];
+    const variant = Math.floor(index / pool.length);
+    const scene = SCENES[(variant + index) % SCENES.length];
+    const sourceLabel = SOURCES[Math.floor(variant / 5) % SOURCES.length];
+    const rotated = rotateOptions(base, (variant + index) % base.options.length);
+    const passage = personalize(base.passage, variant);
+
+    return {
+      ...base,
+      id: 351 + index,
+      focus: `reading:${base.prompt}`,
+      instruction: `【${sourceLabel}情境】${base.instruction}`,
+      prompt: personalize(base.prompt, variant) ?? base.prompt,
+      passage: passage ? `【${scene}・${sourceLabel}】\n${passage}` : undefined,
+      options: rotated.options.map(option => personalize(option, variant) ?? option),
+      correct: rotated.correct,
+      explanation: `${personalize(base.explanation, variant)} 本題來自第 ${variant + 1} 組閱讀情境。`,
+    };
+  });
 }
 
 const SOURCE_BANKS: Record<Level, Question[]> = { N5, N4, N3, N2, N1 };
 
 export const QUESTION_BANKS: Record<Level, Question[]> = {
-  N5: expandBank(SOURCE_BANKS.N5),
-  N4: expandBank(SOURCE_BANKS.N4),
-  N3: expandBank(SOURCE_BANKS.N3),
-  N2: expandBank(SOURCE_BANKS.N2),
-  N1: expandBank(SOURCE_BANKS.N1),
+  N5: [...buildVocabularyBank("N5"), ...buildGrammarBank("N5", SOURCE_BANKS.N5), ...buildReadingBank(SOURCE_BANKS.N5)],
+  N4: [...buildVocabularyBank("N4"), ...buildGrammarBank("N4", SOURCE_BANKS.N4), ...buildReadingBank(SOURCE_BANKS.N4)],
+  N3: [...buildVocabularyBank("N3"), ...buildGrammarBank("N3", SOURCE_BANKS.N3), ...buildReadingBank(SOURCE_BANKS.N3)],
+  N2: [...buildVocabularyBank("N2"), ...buildGrammarBank("N2", SOURCE_BANKS.N2), ...buildReadingBank(SOURCE_BANKS.N2)],
+  N1: [...buildVocabularyBank("N1"), ...buildGrammarBank("N1", SOURCE_BANKS.N1), ...buildReadingBank(SOURCE_BANKS.N1)],
 };
