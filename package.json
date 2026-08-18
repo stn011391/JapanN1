@@ -1,6 +1,6 @@
 {
-  "name": "jlpt-n4-challenge",
-  "version": "1.0.1",
+  "name": "jlpt-level-challenge",
+  "version": "1.1.0",
   "private": true,
   "engines": {
     "node": ">=22.13.0"
@@ -40,5 +40,5 @@
     "wrangler": "4.92.0"
   },
   "type": "module",
-  "displayName": "N4 \u65e5\u672c\u8a9e\u6311\u6226"
+  "displayName": "JLPT \u65e5\u672c\u8a9e\u6311\u6226"
 }

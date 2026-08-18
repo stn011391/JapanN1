@@ -4,6 +4,19 @@
 
 格式依循 [Keep a Changelog](https://keepachangelog.com/zh-TW/1.1.0/)，版本號採用 [Semantic Versioning](https://semver.org/lang/zh-TW/)。
 
+## [1.1.0] - 2026-08-18
+
+### Added
+
+- 新增 N5、N4、N3、N2、N1 五級難度選擇，並以 N3 作為推薦預設
+- 擴充為 100 題分級題庫，每級含 8 題單字漢字、6 題文法與 6 題閱讀
+- 新增依級別調整的 20～40 分鐘倒數時間
+- 新增各級別獨立保存的個人最佳成績
+
+### Changed
+
+- 首頁、測驗流程與成績報告改為顯示目前選擇的 JLPT 級別
+
 ## [1.0.1] - 2026-08-18
 
 ### Changed
