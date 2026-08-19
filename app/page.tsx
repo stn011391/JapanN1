@@ -12,7 +12,7 @@ const categoryCards = [
   { kanji: "文", label: "文法", meta: "6 題", tone: "gold" },
   { kanji: "読", label: "閱讀", meta: "6 題", tone: "blue" },
 ];
-const QUESTION_PROGRESS_VERSION = "v3";
+const QUESTION_PROGRESS_VERSION = "v4";
 
 function MarkedText({ text }: { text: string }) {
   return <>{text.split(/(\[\[.*?\]\])/g).map((part, i) => part.startsWith("[[") ? <u key={i}>{part.slice(2, -2)}</u> : <span key={i}>{part}</span>)}</>;
@@ -275,10 +275,10 @@ export default function Home() {
         <div className="hero-copy">
           <div className="eyebrow"><span>LEVEL</span> N3 是推薦目標，也可以從基礎開始。</div>
           <h1>選對難度，<br /><em>一步一步達成 N3。</em></h1>
-          <p className="hero-lead">從 N5 到 N1 自由選擇。每次開始都會自動換成 20 題新內容，優先安排尚未出現的 8 個單字與不同文法重點；連續 25 次、共 500 題完成後才開始新一輪。</p>
+          <p className="hero-lead">從 N5 到 N1 自由選擇。每次開始都會自動換成 20 題新內容，並以題幹、文章與正解檢查重複；連續 50 次、共 1,000 題完成後才開始新一輪。</p>
 
           <div className="level-selector" aria-label="選擇 JLPT 難度">
-            <div className="level-selector-title"><b>選擇難度</b><span>{config.description}・本輪已抽 {seenCount} / 500 題</span></div>
+            <div className="level-selector-title"><b>選擇難度</b><span>{config.description}・本輪已抽 {seenCount} / 1,000 題</span></div>
             <div className="level-options">
               {LEVELS.map(item => <button key={item} className={level === item ? "active" : ""} aria-pressed={level === item} onClick={() => chooseLevel(item)}>{item === "N3" && <small>推薦</small>}<b>{item}</b><span>{LEVEL_CONFIG[item].name}</span></button>)}
             </div>
@@ -288,14 +288,14 @@ export default function Home() {
             <button className="primary-button" onClick={() => beginTest()}>開始 {level} 測驗 <span>→</span></button>
             <span className="time-note"><b>約 {config.minutes} 分鐘</b><small>公開使用・不需登入</small></span>
           </div>
-          <div className="trust-row"><span><i>✓</i> 每次自動換題</span><span><i>✓</i> 新單字優先</span><span><i>✓</i> 即時解析</span></div>
+          <div className="trust-row"><span><i>✓</i> 內容指紋防重複</span><span><i>✓</i> 400 個新單字</span><span><i>✓</i> 即時解析</span></div>
         </div>
 
         <div className="test-ticket" aria-label={`${level} 測驗資訊卡`}>
           <div className="ticket-edge">日本語能力試験</div>
           <div className="ticket-body">
             <div className="ticket-top"><span>{config.name}模擬練習券</span><b>{level}</b></div>
-            <div className="ticket-title">日本語<br />実力診断</div><div className="ticket-focus">{config.focus}・全 500 題</div>
+            <div className="ticket-title">日本語<br />実力診断</div><div className="ticket-focus">{config.focus}・全 1,000 題</div>
             <div className="ticket-grid"><span><small>問題数</small><b>20</b></span><span><small>目安時間</small><b>{config.minutes}<sup>分</sup></b></span><span><small>練習目標</small><b>70<sup>%</sup></b></span></div>
             <div className="barcode" aria-hidden="true"><span>|||| || | ||| | | ||||</span><small>{level}-2026-READY</small></div>
           </div><div className="stamp">目標<br />N3</div>
@@ -305,7 +305,7 @@ export default function Home() {
       <section className="overview" aria-label="測驗範圍">
         <div className="section-heading"><div><span>{level} TEST MAP</span><h2>{level} 會測什麼？</h2></div><p>題目依照 {level} 對應能力設計，<br />從詞彙理解到情境應用。</p></div>
         <div className="category-grid">{categoryCards.map((item, cardIndex) => <article className={`category-card ${item.tone}`} key={item.kanji}><span className="category-index">0{cardIndex + 1}</span><div className="kanji-orb">{item.kanji}</div><div><h3>{item.label}</h3><p>{item.meta}・{level} 對應範圍</p></div></article>)}</div>
-        <div className="overview-cta"><span>現在選擇：<b>{level}・{config.name}</b>　題庫進度 {seenCount}/500</span><button onClick={() => beginTest()}>自動換新 20 題 →</button></div>
+        <div className="overview-cta"><span>現在選擇：<b>{level}・{config.name}</b>　題庫進度 {seenCount}/1,000</span><button onClick={() => beginTest()}>自動換新 20 題 →</button></div>
       </section>
     </main>
   );
